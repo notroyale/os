@@ -1,0 +1,32 @@
+if [ -f $1 ]
+then
+	if [ $# -eq 1 ]
+	then
+		for user in `users`
+		do
+			echo "Naudotojas: $user"
+			cat $1 | awk -v user=$user '$2 ~ user {RSS += $8; SZ += $9} END {print "\tbendras RSS: " RSS "\n\tbendras SZ: " SZ "\n\tRSS/SZ: " int(100*RSS/SZ) "%"}'
+		done
+	else
+		for user in ${@:2}
+		do
+			echo "Naudotojas: $user"
+			cat $1 | awk -v user=$user '$2 ~ user {RSS += $8; SZ += $9} END {print "\tbendras RSS: " RSS "\n\tbendras SZ: " SZ "\n\tRSS/SZ: " int(100*RSS/SZ) "%"}'
+		done
+	fi
+else
+	if [ $# -eq 0 ]
+	then
+		for user in `users`
+		do
+			echo "Naudotojas: $user"
+			ps -elyf | awk -v user=$user '$2 ~ user {RSS += $8; SZ += $9} END {print "\tbendras RSS: " RSS "\n\tbendras SZ: " SZ "\n\tRSS/SZ: " int(100*RSS/SZ) "%"}'
+		done
+	else
+		for user in $@
+		do
+			echo "Naudotojas: $user"
+			ps -elyf | awk -v user=$user '$2 ~ user {RSS += $8; SZ += $9} END {print "\tbendras RSS: " RSS "\n\tbendras SZ: " SZ "\n\tRSS/SZ: " int(100*RSS/SZ) "%"}'
+		done
+	fi
+fi
