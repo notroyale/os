@@ -74,3 +74,5 @@ fi
 done
 
 fi
+
+// $((100*$was/$total))
