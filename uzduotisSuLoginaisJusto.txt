@@ -1,0 +1,76 @@
+#!/bin/sh
+
+if [ $# -eq 4 ]   
+then
+
+men=$1
+dien=$2
+val=$3
+vartotojas=$4
+
+count=$(cat /etc/passwd | grep $vartotojas | wc -l)
+
+if [ count -eq 0 ]
+then
+    exit 255
+fi
+
+if [ $2 -ge 10 ]
+then 
+    checkString="$1 $2 $3"
+else
+    checkString="$1  $2 $3"
+fi
+
+logins=$(last -50000 | grep $4)
+isCorrect=$( echo "$logins" | grep "$checkString" | wc -l)
+
+if [ $isCorrect -ne 0 ]
+then
+    echo "buvo"
+    exit 0
+else
+    echo "nebuvo"
+    exit 1
+fi
+
+
+
+fi
+
+if [ $# -eq 3 ]
+then
+men=$1
+dien=$2
+val=$3
+
+
+if [ $2 -ge 10 ]
+then 
+checkString="$1 $2 $3"
+else
+checkString="$1  $2 $3"
+fi
+
+total=0
+was=0
+people=$(cat /var/lab/ld2t/vartotojai.txt)
+for i in $people; 
+do
+echo $i
+total=$(($total+1))
+logins=$(last -50000 | grep $i)
+
+isCorrect=$( echo "$logins" | grep "$checkString" | wc -l)
+
+if [ $isCorrect -ne 0 ]
+then
+    echo "buvo"
+else
+    echo "nebuvo"
+    was=$(($was+1))
+fi
+    
+done
+
+fi
