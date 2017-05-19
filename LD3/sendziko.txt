@@ -1,0 +1,108 @@
+/* Deividas Sendžikas IFF-5/8 deisen */
+/* Failas: deisen_ld3.c */
+
+/*Buvo naudoti kodai iš šiu tinklapiu:
+https://os.info.tm:3000/projects/p175b304/wiki/LD3_3
+https://www.quora.com/How-can-I-convert-a-single-byte-into-an-int-in-C
+http://stackoverflow.com/questions/30012794/map-a-file-and-get-byte-value
+http://stackoverflow.com/questions/7021725/converting-string-to-integer-c
+http://stackoverflow.com/questions/238603/how-can-i-get-a-files-size-in-c
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <string.h>
+
+int kp_test_openw(const char *filename);
+int kp_test_close(int fd);
+void* kp_test_mmapw( int d, int size );
+int kp_test_munamp( void *a, int size );
+char get_byte_from_map(void *a,int num);
+int get_byte_num(unsigned char theByte);
+
+int kp_test_openw(const char *filename){
+   int dskr;
+   dskr = open( filename, O_RDONLY | O_EXCL, 0640 );
+   if( dskr == -1 ){
+      perror( filename );
+      exit( 255 );
+   }
+   else{
+	   printf("Prijungiamas failas: %s\n", filename);
+   }
+   return dskr;
+}
+
+int kp_test_close(int fd){
+   int rv;
+   rv = close( fd );
+   if( rv != 0 ) perror ( "close() failed" );
+   return rv;
+}
+
+void* kp_test_mmapw( int d, int size ){
+   void *a = NULL;
+   lseek( d, size - 1, SEEK_SET );
+   a = mmap( NULL, size, PROT_READ, MAP_SHARED, d, 0 );
+   if( a == MAP_FAILED ){
+      perror( "mmap failed" );
+      abort();
+   }
+   return a;
+}
+
+int kp_test_munamp( void *a, int size ){
+   int rv;
+   rv = munmap( a, size );
+   if( rv != 0 ){
+      puts( "munmap failed" );
+      abort();
+   }
+   return 1;
+}
+
+char get_byte_from_map(void *a,int num){
+	char *asChar = (char*)a;
+	char myByte = asChar[num];
+	return myByte;
+}
+
+int get_byte_num(unsigned char theByte){
+	int x= theByte;
+	return x;
+}
+
+int main( int argc, char * argv[] ){
+   char *filename = "/var/lab/ld3tp1/data.bin";
+   int d;
+   void *a = NULL;
+   printf( "(C) 2017 Deividas Sendžikas\n");
+   if( argc < 2 ){//veikia tik tada, kai nera duoti jokie duomenys
+      printf( "Nera ivestu reikiamu duomenu.");
+      exit( 255 );
+   }
+   d = kp_test_openw( filename );
+   
+   struct stat buf;
+   stat(filename, &buf);
+   int size = buf.st_size;
+   a = kp_test_mmapw( d, size );
+   
+   int n=1;
+   while(n<argc){
+	   int x=atoi(argv[n]);
+	   if(x<size && x>=0){
+		   char theByte=get_byte_from_map(a,x);
+		   int answer=get_byte_num(theByte);
+		   printf("[%d] = %d\n", x, answer);
+	   }
+	   else{
+		   printf("[%d] - reiksmes atspausdinti negalima, nes iseinama is prijungto failo ribu\n", x);
+	   }
+	   n++;
+   }
+   kp_test_munamp( a, size );
+   kp_test_close( d );
+   return 0;
+}
