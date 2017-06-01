@@ -1,0 +1,52 @@
+
+
+#Denis Jankelaic, IFF-5/3
+#!/bin/sh
+if [ $# -eq 1 ]
+then
+        echo "a dalis"
+        echo "Ivestas vienas vartotojas: $1"
+        ps -u $1 -o pid,tty,comm
+        echo "b dalis"
+        echo "Procesai, susije tik su terminalu:"
+        ps -u $1 -o pid,tty,comm | grep pts/
+        echo "c dalis"
+        duom=`who | grep $1 | awk '{print $2}'`
+        echo "procesai susije su terminalais $duom, kuriais $1 yra prisijunges"
+        for d in duom ; do
+        ps -u $1 -o pid,tty,comm | grep "$d"
+        done
+        echo "d dalis"
+        echo "vartotojo $1 komandu sarasas be pasikartojimu"
+        ps -u $1 -o comm | sort -u
+elif [ $# -eq 0 ]
+then
+  exit 255
+else
+        echo "Ivesta daug vartotoju"
+   for user in ${@:1}
+     do
+        echo "a dalis"
+        echo "Naudotojo vardas: $user"
+        ps -u $user -o pid,tty,comm
+        echo "b dalis"
+        echo "Procesai, susije tik su terminalu:"
+        ps -u $user -o pid,tty,comm | grep pts/
+        echo "c dalis"
+        duom=`who | grep $user | awk '{print $2}'`
+        echo "procesai susije su terminalais $duom, kuriais $user yra prisijunges"
+        for d in duom ; do
+        ps -u $user -o pid,tty,comm | grep "$d"
+        done
+
+        echo "d dalis"
+        echo "vartotojo $user komandu sarasas be pasikartojimu"
+        ps -u $user -o comm | sort -u
+
+        done
+fi
+
+
+
+
+

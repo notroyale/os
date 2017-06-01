@@ -1,0 +1,43 @@
+#!/bin/sh
+
+if [ $# -eq 0 ]
+then
+	exit 255
+fi
+
+useriai=`for user in $@
+do
+	echo $user
+done | sort`
+
+for user in $useriai
+do
+	echo ""
+	echo "a dalis"
+	if [ $# -eq 1 ]
+	then
+		echo "Ivestas vienas vartotojas: $user"
+	else
+		echo "Ivestas vartotojas: $user"
+	fi
+	echo "Visi vartotojo $user procesai:"
+	ps -o pid,tty,comm -u $user
+	echo ""
+	echo "b dalis"
+	echo "Procesai, susije tik su terminalu"
+	ps -o pid,tty,comm -u $user | awk '{if($2 ~ /pts/) print $0}'
+	userterminalas=`who | grep $user | awk '{print $2}'`
+	echo ""
+	echo "c dalis"
+	echo "procesai, susije su terminalais $userterminalas, kuriais naudotojas $user yra prisijunges"
+	for terminalas in $userterminalas
+	do
+		ps -o pid,tty,comm -t $terminalas
+	done
+	echo ""
+	echo "d dalis"
+	echo "vartotojo $user komandu sarasas be pasikartojimu"
+	ps -o pid= -o tty= -o comm= -u $user | awk '{print $NF}' | sort | uniq
+done
+
+
