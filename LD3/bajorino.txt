@@ -1,0 +1,81 @@
+/* Algirdas Bajorinas iff-5/8 algbaj */
+/* Failas:  algbaj_ld3c.c*/
+/* Yra programos fragmentu is https://www.tutorialspoint.com/c_standard_library/c_function_fwrite.htm */
+/* http://stackoverflow.com/questions/22059189/read-a-file-as-byte-array */
+/* https://www.tutorialspoint.com/c_standard_library/c_function_fread.htm */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <dirent.h>
+
+
+int main( int argc, char * argv[] ){
+	
+	if ( argc != 2 )
+	{
+		printf("Paduota per daug ar per mazai argumentu, leidziant programa parasykite tik viena argumenta N = sveikas skaicius \n");
+		return 1;
+	}
+	printf( "(C) 2017 Algirdas Bajorinas \n");
+	int N;
+	sscanf (argv[1],"%d",&N);
+	char* path = "/export/home/algbaj/kolis/data.bin";
+	FILE * fp;
+    fp = fopen (path, "rb+");
+	if( fp == 0)
+	{
+		printf("Failas nenuskaitytas \n");
+		return 1;
+	}
+	struct stat st;
+    stat(path, &st);
+	int size = (int) st.st_size;
+	
+    if (N > size)
+    {	
+        printf("Norima nukopijuoti per daug baitu \n");
+        return 1;
+    }
+	
+	int M = size - N;
+	if( M > N )
+	{
+		char buf1[N];
+		long seek_status;
+		fseek(fp, N, SEEK_END);
+		seek_status = fseek(fp, N, SEEK_END);
+		if (seek_status == -1)
+		{
+			printf("Baitai nenukopijuoti");
+			return 1;
+		}
+		fread(buf1, size, 1, fp);
+		rewind(fp);
+		fwrite(buf1,1,N,fp); 
+		fclose(fp);
+		printf("Nukopijuota: %d baitu\n", N);
+	}
+	else
+	{
+		char buf2[M];
+		long seek_status;
+		seek_status = fseek(fp, N, SEEK_END);
+		if (seek_status == -1)
+		{
+			printf("Baitai nenukopijuoti");
+			return 1;
+		}
+		fread(buf2, M,1,fp);
+		rewind(fp);
+		fwrite(buf2,1,M,fp );
+		fclose(fp);
+		printf("Nukopijuota: %d baitu\n", M);
+	}
+	return 0;
+}
