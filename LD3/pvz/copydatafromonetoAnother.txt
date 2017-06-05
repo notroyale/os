@@ -1,0 +1,165 @@
+
+#include <stdio.h>
+
+#include <stdlib.h>
+
+#include <sys/mman.h>
+
+#include <sys/types.h>
+
+#include <sys/stat.h>
+
+#include <unistd.h>
+
+#include <fcntl.h>
+
+#include <sys/time.h>
+
+#include <string.h>
+
+
+
+#define SIZE 1048576
+
+
+
+
+
+
+int lo_test_openRead(const char *name);
+int lo_test_close(int fd);
+int lo_test_openWrite(const char *name);
+void* lo_test_mmapWrite( int d, int size );
+void* lo_test_mmapRead( int d, int size );
+
+
+int lo_test_openRead(const char *name){
+
+   int dskr;
+
+   dskr = open( name, O_RDONLY );
+
+   if( dskr == -1 ){
+
+      perror( name );
+
+      exit(1);
+
+   }
+
+   printf( "dskrRead = %d\n", dskr );
+   return dskr;
+
+}
+int lo_test_openWrite(){
+
+   int dskr;
+
+
+   dskr = open( name , O_WRONLY | O_CREAT | O_EXCL, 0640 );
+   
+   if( dskr == -1 ){
+
+      perror( name );
+
+      exit(1);
+
+   }
+
+
+   printf( "dskrWrite = %d\n", dskr );
+
+   return dskr;
+
+}
+
+void* lo_test_mmapWrite( int d, int size ){
+	
+   void *a = NULL;
+
+
+   a = mmap( NULL, size, PROT_WRITE, MAP_SHARED, d, 0 );
+
+   if( a == MAP_FAILED ){
+
+      perror( "mmap failed" );
+
+      abort();
+
+   }
+
+   return a;
+
+}
+
+void* lo_test_mmapRead( int d, int size ){
+
+   void *a = NULL;
+
+
+   a = mmap( NULL, size, PROT_READ, MAP_SHARED, d, 0 );
+
+   if( a == MAP_FAILED ){
+
+      perror( "mmap failed" );
+
+      abort();
+
+   }
+
+   return a;
+
+}
+
+int lo_test_close(int fd){
+
+   int rv;
+
+   rv = close( fd );
+
+   if( rv != 0 ) perror ( "close() failed" );
+
+   else puts( "closed" );
+
+   return rv;
+
+}
+int main( int argc, char * argv[] ){
+
+   int dRead;
+   int dWrite;
+
+   void *a = NULL;
+   struct stat buf;
+  
+
+   printf( "(C) 2017 Linas Opulskis, %s\n", __FILE__ );
+	
+   if( argc != 3 ){
+
+   printf("%d\n",argc);
+      printf( "Naudojimas:\n %s failas\n", argv[0] );
+
+      exit( 255 );
+
+   }
+
+   dRead = lo_test_openRead( argv[1] );
+   dWrite = lo_test_openWrite( argv[2] );
+   
+   
+   fstat(dRead,&buf);
+   int size = (int) buf.st_size;
+   
+   void* pirmasMmap;
+   void* antrasMmap;
+   
+   pirmasMmap=lo_test_mmapRead(dRead,size);
+   antrasMmap=lo_test_mmapWrite(dWrite,size);
+   memccpy(antrasMmap,pirmasMmap,size);
+   close(dWrite);
+   close(dRead);
+   
+   return 0;
+
+}

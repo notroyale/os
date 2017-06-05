@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#define BUFFLEN 1048
+
+void* lo_test_mmapw( int d, int size );
+int lo_test_open(const char *name);
+int lo_test_close(int fd);
+
+
+
+
+
+int lo_test_open(const char *name){
+
+   int dskr;
+
+   dskr = open( name, O_WRONLY );
+
+   if( dskr == -1 ){
+
+      perror( name );
+
+      exit(1);
+
+   }
+
+   printf( "dskr = %d\n", dskr );
+
+   return dskr;
+
+}
+
+int lo_test_close(int fd){
+
+   int rv;
+
+   rv = close( fd );
+
+   if( rv != 0 ) perror ( "close() failed" );
+
+   else puts( "closed" );
+
+   return rv;
+
+}
+void* lo_test_mmapw( int d, int size ){
+
+   void *a = NULL;
+
+   lseek( d, size - 1, SEEK_SET );
+
+   write( d, &d , 1 );        /* iraso bile ka i failo gala */
+
+   a = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, d, 0 );
+
+   if( a == MAP_FAILED ){
+
+      perror( "mmap failed" );
+
+      abort();
+
+   }
+
+   return a;
+
+}
+
+
+int main( int argc, char * argv[] ){
+
+   int d;
+
+   void *a = NULL;
+   struct stat buf;
+  
+
+   printf( "(C) 2017 Linas Opulskis, %s\n", __FILE__ );
+	
+   if( argc != 2 ){
+
+      printf( "Naudojimas:\n %s failas\n", argv[0] );
+
+      exit( 255 );
+
+   }
+
+   d = lo_test_open( argv[1] );
+   fstat(d,&buf);
+   int size = (int) buf.st_size;
+   if(size>1048){
+
+   lseek(d,1048,SEEK_SET );
+      printf ("%d\n",size);
+   write(d,"This should make sense           kk \n",100);
+   }
+   else printf ("%d\n",size);
+  
+    close(d);
+   return 0;
+
+}

@@ -1,0 +1,154 @@
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#define BUFFLEN 1048
+
+
+
+
+
+int lo_test_openRead(const char *name);
+int lo_test_close(int fd);
+int lo_test_openWrite(const char *name);
+void* lo_test_mmapw( int d, int size );
+int lo_test_munamp( void *a, int size );
+
+
+int lo_test_openRead(const char *name){
+
+   int dskr;
+
+   dskr = open( name, O_RDWR );
+
+   if( dskr == -1 ){
+
+      perror( name );
+
+      exit(1);
+
+   }
+
+   printf( "dskrWrite = %d\n", dskr );
+   return dskr;
+
+}
+int lo_test_openWrite(const char *name){
+
+   int dskr;
+
+
+   dskr = open( name, O_RDWR | O_CREAT | O_EXCL, 0640 );
+
+   if( dskr == -1 ){
+
+      perror( name );
+
+      exit(1);
+
+   }
+   printf( "dskr = %d\n", dskr );
+
+   return dskr;
+
+}
+
+int lo_test_close(int fd){
+
+   int rv;
+
+   rv = close( fd );
+
+   if( rv != 0 ) perror ( "close() failed" );
+
+   else puts( "closed" );
+
+   return rv;
+
+}
+
+void* lo_test_mmapw( int d, int size ){
+
+   void *a = NULL;
+
+   lseek( d, size - 1, SEEK_SET );
+
+   write( d, &d , 1 );
+
+   a = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, d, 0 );
+
+   if( a == MAP_FAILED ){
+
+      perror( "mmap failed" );
+
+      abort();
+
+   }
+
+   return a;
+
+}
+
+
+int lo_test_munamp( void *a, int size ){
+
+   int rv;
+
+   rv = munmap( a, size );
+
+   if( rv != 0 ){
+
+      puts( "munmap failed" );
+
+      abort();
+
+   }
+
+   return 1;
+
+}
+
+
+
+int main( int argc, char * argv[] ){
+
+   int dRead;
+   int dWrite;
+
+   void *aRead = NULL;
+   void *aWrite = NULL;
+   struct stat buf;
+  
+
+   printf( "(C) 2017 Linas Opulskis, %s\n", __FILE__ );
+	
+   if( argc != 3 ){
+
+      printf( "Naudojimas:\n %s failas\n", argv[0] );
+
+      exit( 255 );
+
+   }
+
+   dRead = lo_test_openRead( argv[1] );
+   dWrite = lo_test_openWrite( argv[2] );
+   
+   fstat(dRead,&buf);
+   int size = (int) buf.st_size;
+         printf("%d\n",size);
+   aRead=lo_test_mmapw(dRead,size);
+   aWrite=lo_test_mmapw(dWrite,size);
+   memcpy(aWrite,aRead,size);
+   
+   //lo_test_munamp(aRead,size);
+   //lo_test_munamp(aWrite,size);
+   close(dWrite);
+   close(dRead);
+   
+   return 0;
+
+}
