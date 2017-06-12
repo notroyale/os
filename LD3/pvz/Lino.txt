@@ -1,0 +1,160 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <dirent.h>
+#include <err.h>
+
+
+//naudota medziaga
+//https://stackoverflow.com/questions/20775762/how-to-walk-through-a-directory-in-c-and-print-all-files-name-and-permissions
+//https://stackoverflow.com/questions/22160807/file-d-name-into-a-variable-in-c
+
+ 
+ 
+
+int kp_test_open(const char *name);
+
+int kp_test_close(int fd);
+
+int kp_test_open(const char *name){
+
+   int dskr;
+
+   dskr = open( name, O_RDONLY );
+
+   if( dskr == -1 ){
+
+      perror( name );
+
+      exit(1);
+
+   }
+
+   printf( "dskr = %d\n", dskr );
+
+   return dskr;
+
+}
+
+int kp_test_close(int fd){
+
+   int rv;
+
+   rv = close( fd );
+
+   if( rv != 0 ) perror ( "close() failed" );
+
+   else puts( "closed" );
+
+   return rv;
+
+}
+
+ 
+int main( int argc, char * argv[] ){
+   
+    if ( argc < 2 )
+    {
+        printf("Paduota per daug ar per mazai argumentu, leidziant programa parasykite tik viena argumenta N = sveikas skaicius \n");
+        return 1;
+    }
+	int counter = 1;
+	int size1 = 1000000;
+	int size2 = 1000000;
+	char name1 [255];
+	char name2 [255];
+	char fileName[255];
+	char path1 [255];
+	char path2 [255];
+	
+	while (counter < argc ) {
+printf("%s\n",argv[counter]);
+	DIR *midir;
+    struct dirent* info_archivo;
+    struct stat fileStat;
+    char fullpath[256];
+
+
+    if ((midir=opendir(argv[counter])) == NULL)
+    {
+        perror("Error in opendir");
+        exit(-1);
+    }
+
+    while ((info_archivo = readdir(midir)) != 0)
+    {
+        strcpy (fullpath, argv[counter]);
+        strcat (fullpath, "/");
+        strcat (fullpath, info_archivo->d_name);
+        if (!stat(fullpath, &fileStat))
+        {
+	strncpy(fileName, info_archivo->d_name, 254);
+        fileName[254] = '\0';
+	int size = (int) fileStat.st_size;
+	if(size<size1||size<size2){
+	if (size<size1){
+	strcpy (name1, fileName);
+	strcpy (path1, fullpath);
+	size1=size;}
+	else{
+	strcpy (name2, fileName);
+	strcpy (path2, fullpath);
+	size2=size;
+	}
+	//name1=fullpath;
+	}
+        } else
+        {
+            perror("Error in stat");
+        }
+    }
+    closedir(midir);
+	counter++;
+	}
+	//printf("Maziausias failas : %s\t dydis : %d\n",name1,size1);
+	chmod(path1,S_IRWXU);
+	chmod(path2,S_IRWXU);
+	//chmod(path1,700);
+	//chmod(path2,700);
+	int desk1 = kp_test_open(path1);
+	int desk2 = kp_test_open(path2);
+	char content1 [size1];
+	char content2 [size2];
+	read(desk1,content1,size1);
+	read(desk2,content2,size2);
+	printf("%d\n",strcmp(content1,content2));
+	if(strcmp(content1,content2)==0&&strcmp(name1,name2)==0){
+	chmod(path1,700);
+	chmod(path2,700);
+	}
+	struct stat fileStat1;
+	struct stat fileStat2;
+	lstat(path1,&fileStat1);
+	lstat(path2,&fileStat2);
+	if(fileStat1.st_ino==fileStat2.st_ino&&fileStat1.st_nlink==fileStat2.st_nlink)
+	{
+		if(remove(path1)!=0){
+		perror(path1);
+		}
+		if(remove(path2)!=0){
+		perror(path2);
+		}
+		
+	}
+	
+	kp_test_close(desk1);
+	kp_test_close(desk2);
+	
+	
+	
+	printf("%s\t = path1 %s\t = path2 \n", path1,path2);
+	printf("Maziausias failas : %s\t dydis : %d\n",name1,size1);
+	printf("Maziausias failas : %s\t dydis : %d\n",name2,size2);
+	return 0;
+}
